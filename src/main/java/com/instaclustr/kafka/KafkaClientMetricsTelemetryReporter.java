@@ -22,25 +22,24 @@ public class KafkaClientMetricsTelemetryReporter implements MetricsReporter, Cli
     }
 
     @Override
-    public void configure(Map<String, ?> configs) {
-        configPath = System.getenv("KAFKA_TELEMETRY_CONFIG_PATH");
+    public void configure(final Map<String, ?> configs) {
+        configPath = System.getenv("KAFKA_CLIENT_METRICS_CONFIG_PATH");
         kafkaClientMetricsTelemetryConfig = KafkaClientMetricsTelemetryConfig.load(configPath);
-        logger.info("Loaded telemetry config: {}", kafkaClientMetricsTelemetryConfig);
     }
 
     @Override
-    public void metricChange(KafkaMetric metric) {
-        logger.debug("Changing the metric: " + metric.metricName());
+    public void metricChange(final KafkaMetric metric) {
+        logger.info("Changing the metric {}", metric.metricName());
     }
 
     @Override
-    public void metricRemoval(KafkaMetric metric) {
-        logger.debug("Removing the metric: " + metric.metricName());
+    public void metricRemoval(final KafkaMetric metric) {
+        logger.info("Removing the metric {}", metric.metricName());
     }
 
     @Override
     public void close() {
-        logger.debug("Closing the KIP-714 metric reporter");
+        logger.info("Closing the reporter");
     }
 
     @Override

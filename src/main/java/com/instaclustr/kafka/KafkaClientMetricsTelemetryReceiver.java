@@ -9,22 +9,21 @@ import org.slf4j.LoggerFactory;
 public class KafkaClientMetricsTelemetryReceiver implements ClientTelemetryReceiver {
 
     private static final Logger logger = LoggerFactory.getLogger(KafkaClientMetricsTelemetryReceiver.class);
-    private final KafkaClientMetricsTelemetryConfig config;
+    private final KafkaClientMetricsTelemetryConfig kafkaClientMetricsTelemetryConfig;
 
-    public KafkaClientMetricsTelemetryReceiver(KafkaClientMetricsTelemetryConfig config) {
-        this.config = config;
+    public KafkaClientMetricsTelemetryReceiver(KafkaClientMetricsTelemetryConfig kafkaClientMetricsTelemetryConfig) {
+        this.kafkaClientMetricsTelemetryConfig = kafkaClientMetricsTelemetryConfig;
     }
 
     @Override
     public void exportMetrics(AuthorizableRequestContext requestContext, ClientTelemetryPayload telemetryPayload) {
-        // Enrich payload with clusterId, nodeId, timestamp
         KafkaClientMetricsTelemetryPayload enrichedPayload = new KafkaClientMetricsTelemetryPayload(
                 telemetryPayload,
-                config.metadata,
+                kafkaClientMetricsTelemetryConfig.metadata,
                 System.currentTimeMillis()
         );
 
-        switch (config.mode) {
+        switch (kafkaClientMetricsTelemetryConfig.mode) {
             case HTTP:
                 forwardViaHttp(enrichedPayload);
                 break;
@@ -38,14 +37,14 @@ public class KafkaClientMetricsTelemetryReceiver implements ClientTelemetryRecei
     }
 
     private void forwardViaHttp(KafkaClientMetricsTelemetryPayload payload) {
-        logger.info("Forwarding metrics via HTTP to {}: {}", config.endpoint, payload);
+        logger.info("Forwarding metrics via HTTP to {}: {}", kafkaClientMetricsTelemetryConfig.endpoint, payload);
     }
 
     private void forwardViaGrpc(KafkaClientMetricsTelemetryPayload payload) {
-        logger.info("Forwarding metrics via gRPC to {}: {}", config.endpoint, payload);
+        logger.info("Forwarding metrics via gRPC to {}: {}", kafkaClientMetricsTelemetryConfig.endpoint, payload);
     }
 
     private void logPayload(KafkaClientMetricsTelemetryPayload payload) {
-        logger.info("Logging metrics to {}: {}", config.logPath, payload);
+        logger.info("Logging metrics to {}: {}", kafkaClientMetricsTelemetryConfig.logPath, payload);
     }
 }
