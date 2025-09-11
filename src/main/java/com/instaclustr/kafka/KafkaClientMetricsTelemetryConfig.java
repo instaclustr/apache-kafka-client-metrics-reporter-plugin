@@ -27,6 +27,8 @@ public class KafkaClientMetricsTelemetryConfig {
             config.forwarder = new Forwarder();
             config.forwarder.mode = Forwarder.Mode.valueOf(((String) forwarderMap.get("mode")).toUpperCase());
             config.forwarder.timeout = (int) forwarderMap.get("timeout");
+            config.forwarder.logPath = (String) forwarderMap.get("logPath");
+            config.forwarder.endpoint = (String) forwarderMap.get("endpoint");
 
             config.metadata = (Map<String, Object>) obj.get("metdata");
 

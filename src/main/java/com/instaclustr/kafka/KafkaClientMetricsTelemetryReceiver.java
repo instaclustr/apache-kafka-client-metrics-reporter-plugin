@@ -5,12 +5,9 @@ import com.instaclustr.kafka.forwarders.MetricsForwarderFactory;
 import org.apache.kafka.server.authorizer.AuthorizableRequestContext;
 import org.apache.kafka.server.telemetry.ClientTelemetryPayload;
 import org.apache.kafka.server.telemetry.ClientTelemetryReceiver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class KafkaClientMetricsTelemetryReceiver implements ClientTelemetryReceiver {
 
-    private static final Logger logger = LoggerFactory.getLogger(KafkaClientMetricsTelemetryReceiver.class);
     private final KafkaClientMetricsTelemetryConfig kafkaClientMetricsTelemetryConfig;
     private final MetricsForwarder metricsForwarder;
 
