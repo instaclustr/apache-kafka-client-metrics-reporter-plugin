@@ -14,7 +14,7 @@ public class KafkaClientMetricsTelemetryReporter implements MetricsReporter, Cli
     private static final Logger logger = LoggerFactory.getLogger(KafkaClientMetricsTelemetryReporter.class);
 
     private String configPath;
-    private TelemetryConfig telemetryConfig;
+    private KafkaClientMetricsTelemetryConfig kafkaClientMetricsTelemetryConfig;
 
     @Override
     public void init(List<KafkaMetric> metrics) {
@@ -24,8 +24,8 @@ public class KafkaClientMetricsTelemetryReporter implements MetricsReporter, Cli
     @Override
     public void configure(Map<String, ?> configs) {
         configPath = System.getenv("KAFKA_TELEMETRY_CONFIG_PATH");
-        telemetryConfig = TelemetryConfig.load(configPath);
-        logger.info("Loaded telemetry config: {}", telemetryConfig);
+        kafkaClientMetricsTelemetryConfig = KafkaClientMetricsTelemetryConfig.load(configPath);
+        logger.info("Loaded telemetry config: {}", kafkaClientMetricsTelemetryConfig);
     }
 
     @Override
@@ -45,6 +45,6 @@ public class KafkaClientMetricsTelemetryReporter implements MetricsReporter, Cli
 
     @Override
     public ClientTelemetryReceiver clientReceiver() {
-        return new KafkaClientMetricsTelemetryReceiver(telemetryConfig);
+        return new KafkaClientMetricsTelemetryReceiver(kafkaClientMetricsTelemetryConfig);
     }
 }

@@ -9,16 +9,16 @@ import org.slf4j.LoggerFactory;
 public class KafkaClientMetricsTelemetryReceiver implements ClientTelemetryReceiver {
 
     private static final Logger logger = LoggerFactory.getLogger(KafkaClientMetricsTelemetryReceiver.class);
-    private final TelemetryConfig config;
+    private final KafkaClientMetricsTelemetryConfig config;
 
-    public KafkaClientMetricsTelemetryReceiver(TelemetryConfig config) {
+    public KafkaClientMetricsTelemetryReceiver(KafkaClientMetricsTelemetryConfig config) {
         this.config = config;
     }
 
     @Override
     public void exportMetrics(AuthorizableRequestContext requestContext, ClientTelemetryPayload telemetryPayload) {
         // Enrich payload with clusterId, nodeId, timestamp
-        TelemetryPayload enrichedPayload = new TelemetryPayload(
+        KafkaClientMetricsTelemetryPayload enrichedPayload = new KafkaClientMetricsTelemetryPayload(
                 telemetryPayload,
                 config.metadata,
                 System.currentTimeMillis()
@@ -37,15 +37,15 @@ public class KafkaClientMetricsTelemetryReceiver implements ClientTelemetryRecei
         }
     }
 
-    private void forwardViaHttp(TelemetryPayload payload) {
+    private void forwardViaHttp(KafkaClientMetricsTelemetryPayload payload) {
         logger.info("Forwarding metrics via HTTP to {}: {}", config.endpoint, payload);
     }
 
-    private void forwardViaGrpc(TelemetryPayload payload) {
+    private void forwardViaGrpc(KafkaClientMetricsTelemetryPayload payload) {
         logger.info("Forwarding metrics via gRPC to {}: {}", config.endpoint, payload);
     }
 
-    private void logPayload(TelemetryPayload payload) {
+    private void logPayload(KafkaClientMetricsTelemetryPayload payload) {
         logger.info("Logging metrics to {}: {}", config.logPath, payload);
     }
 }

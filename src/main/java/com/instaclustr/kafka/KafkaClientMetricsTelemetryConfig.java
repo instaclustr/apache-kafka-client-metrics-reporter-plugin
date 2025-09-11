@@ -4,16 +4,16 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
-public class TelemetryConfig {
+public class KafkaClientMetricsTelemetryConfig {
     public enum Mode { HTTP, GRPC, LOG }
     public Mode mode;
     public String endpoint;
     public String logPath;
     public String metadata;
 
-    public static TelemetryConfig load(final String path) {
+    public static KafkaClientMetricsTelemetryConfig load(final String path) {
         Properties props = new Properties();
-        TelemetryConfig config = new TelemetryConfig();
+        KafkaClientMetricsTelemetryConfig config = new KafkaClientMetricsTelemetryConfig();
         try (FileInputStream fis = new FileInputStream(path)) {
             props.load(fis);
             config.mode = Mode.valueOf(props.getProperty("mode", "LOG"));
