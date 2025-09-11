@@ -1,28 +1,38 @@
 package com.instaclustr.kafka;
 
+import org.yaml.snakeyaml.Yaml;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Properties;
+import java.util.Map;
 
 public class KafkaClientMetricsTelemetryConfig {
-    public enum Mode { HTTP, GRPC, LOG }
-    public Mode mode;
-    public String endpoint;
-    public String logPath;
-    public String metadata;
+    public Forwarder forwarder;
+    public Map<String, Object> metadata;
+
+    public static class Forwarder {
+        public enum Mode { HTTP, GRPC, LOG }
+        public Mode mode;
+        public int timeout;
+        public String endpoint;
+        public String logPath;
+    }
 
     public static KafkaClientMetricsTelemetryConfig load(final String path) {
-        Properties props = new Properties();
-        KafkaClientMetricsTelemetryConfig config = new KafkaClientMetricsTelemetryConfig();
+        Yaml yaml = new Yaml();
         try (FileInputStream fis = new FileInputStream(path)) {
-            props.load(fis);
-            config.mode = Mode.valueOf(props.getProperty("mode", "LOG"));
-            config.endpoint = props.getProperty("endpoint", "");
-            config.logPath = props.getProperty("logPath", "metrics.log");
-            config.metadata = props.getProperty("metadata", "unknown");
+            Map<String, Object> obj = yaml.load(fis);
+            KafkaClientMetricsTelemetryConfig config = new KafkaClientMetricsTelemetryConfig();
+
+            Map<String, Object> forwarderMap = (Map<String, Object>) obj.get("forwarder");
+            config.forwarder = new Forwarder();
+            config.forwarder.mode = Forwarder.Mode.valueOf(((String) forwarderMap.get("mode")).toUpperCase());
+            config.forwarder.timeout = (int) forwarderMap.get("timeout");
+
+            config.metadata = (Map<String, Object>) obj.get("metdata");
+
+            return config;
         } catch (IOException e) {
             throw new RuntimeException("Failed to load telemetry config", e);
         }
-        return config;
     }
 }
