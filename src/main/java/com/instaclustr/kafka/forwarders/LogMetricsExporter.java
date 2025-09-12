@@ -13,8 +13,7 @@ public class LogMetricsExporter implements MetricsExporter {
     }
 
     @Override
-    public void forward(KafkaClientMetricsTelemetryPayload payload) {
+    public void export(KafkaClientMetricsTelemetryPayload payload) {
         logger.info("Logging metrics to {}: {}", logPath, payload);
-        // Logging logic here
     }
 }

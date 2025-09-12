@@ -27,7 +27,7 @@ public class KafkaClientMetricsTelemetryReceiver implements ClientTelemetryRecei
                 metadata.toString(),
                 System.currentTimeMillis()
         );
-        metricsExporter.forward(enrichedPayload);
+        metricsExporter.export(enrichedPayload);
     }
 
     public Map<String, Object> loadMetadataFromYamlConfig() {
