@@ -13,7 +13,6 @@ public class KafkaClientMetricsTelemetryReporter implements MetricsReporter, Cli
 
     private static final Logger logger = LoggerFactory.getLogger(KafkaClientMetricsTelemetryReporter.class);
 
-    private KafkaClientMetricsTelemetryConfig kafkaClientMetricsTelemetryConfig;
 
     @Override
     public void init(List<KafkaMetric> metrics) {
@@ -22,12 +21,7 @@ public class KafkaClientMetricsTelemetryReporter implements MetricsReporter, Cli
 
     @Override
     public void configure(final Map<String, ?> configs) {
-        final String kafkaClientMetricsConfigFilePath = System.getenv("KAFKA_CLIENT_METRICS_CONFIG_PATH");
-        if (kafkaClientMetricsConfigFilePath == null || kafkaClientMetricsConfigFilePath.isEmpty()) {
-            logger.error("KAFKA_CLIENT_METRICS_CONFIG_PATH environment variable not set");
-        } else {
-            this.kafkaClientMetricsTelemetryConfig = KafkaClientMetricsTelemetryConfig.load(kafkaClientMetricsConfigFilePath);
-        }
+        logger.info("Configuration of the reporter");
     }
 
     @Override
@@ -47,9 +41,6 @@ public class KafkaClientMetricsTelemetryReporter implements MetricsReporter, Cli
 
     @Override
     public ClientTelemetryReceiver clientReceiver() {
-        if (this.kafkaClientMetricsTelemetryConfig == null) {
-            logger.info("Reporter not configured. Call configure() first.");
-        }
-        return new KafkaClientMetricsTelemetryReceiver(this.kafkaClientMetricsTelemetryConfig);
+        return new KafkaClientMetricsTelemetryReceiver();
     }
 }
