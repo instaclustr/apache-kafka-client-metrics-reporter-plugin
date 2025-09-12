@@ -4,9 +4,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.example</groupId>
+    <groupId>com.kafka.instaclustr</groupId>
     <artifactId>apache-kafka-client-metrics-reporter-plugin</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0</version>
+    <packaging>jar</packaging>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
@@ -34,14 +35,12 @@
             <version>2.5</version>
         </dependency>
 
-        <!-- 1) The OTLP proto definitions + generated gRPC stubs -->
         <dependency>
             <groupId>io.opentelemetry.proto</groupId>
             <artifactId>opentelemetry-proto</artifactId>
             <version>1.8.0-alpha</version>
         </dependency>
 
-        <!-- 2) gRPC runtime (Netty transport, Protobuf + Stub support) -->
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-netty-shaded</artifactId>
@@ -58,13 +57,11 @@
             <version>1.75.0</version>
         </dependency>
 
-        <!-- 3) Protobuf runtime -->
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
             <version>4.32.0</version>
         </dependency>
-
 
     </dependencies>
 
@@ -79,11 +76,12 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>3.7.1</version>
                 <configuration>
-                    <descriptors>
-                        <descriptor>package.xml</descriptor>
-                    </descriptors>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
                     <archive>
                         <manifest>
+                            <mainClass>com.instaclustr.kafka.KafkaClientMetricsReporter</mainClass>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                         </manifest>
@@ -101,7 +99,5 @@
             </plugin>
         </plugins>
     </build>
-
-
 
 </project>
