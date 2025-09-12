@@ -1,6 +1,6 @@
 package com.instaclustr.kafka.forwarders;
 
-import com.instaclustr.kafka.KafkaClientMetricsTelemetryPayload;
+import com.instaclustr.kafka.KafkaClientMetricsReporterPayload;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
@@ -30,7 +30,7 @@ public class GrpcMetricsExporter implements MetricsExporter {
     }
 
     @Override
-    public void export(KafkaClientMetricsTelemetryPayload payload) {
+    public void export(KafkaClientMetricsReporterPayload payload) {
         try {
 
             ExportMetricsServiceRequest req = ExportMetricsServiceRequest.parseFrom((byte[]) payload.originalPayload);

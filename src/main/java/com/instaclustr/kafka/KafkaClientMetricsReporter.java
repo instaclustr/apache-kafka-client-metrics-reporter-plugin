@@ -9,9 +9,9 @@ import org.apache.kafka.server.telemetry.ClientTelemetryReceiver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class KafkaClientMetricsTelemetryReporter implements MetricsReporter, ClientTelemetry {
+public class KafkaClientMetricsReporter implements MetricsReporter, ClientTelemetry {
 
-    private static final Logger logger = LoggerFactory.getLogger(KafkaClientMetricsTelemetryReporter.class);
+    private static final Logger logger = LoggerFactory.getLogger(KafkaClientMetricsReporter.class);
 
 
     @Override
@@ -41,6 +41,6 @@ public class KafkaClientMetricsTelemetryReporter implements MetricsReporter, Cli
 
     @Override
     public ClientTelemetryReceiver clientReceiver() {
-        return new KafkaClientMetricsTelemetryReceiver();
+        return new KafkaClientMetricsReporterReceiver();
     }
 }
