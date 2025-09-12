@@ -1,7 +1,7 @@
 package com.instaclustr.kafka;
 
-import com.instaclustr.kafka.forwarders.MetricsForwarder;
-import com.instaclustr.kafka.forwarders.MetricsForwarderFactory;
+import com.instaclustr.kafka.forwarders.MetricsExporter;
+import com.instaclustr.kafka.forwarders.MetricsExporterFactory;
 import org.apache.kafka.server.authorizer.AuthorizableRequestContext;
 import org.apache.kafka.server.telemetry.ClientTelemetryPayload;
 import org.apache.kafka.server.telemetry.ClientTelemetryReceiver;
@@ -9,11 +9,11 @@ import org.apache.kafka.server.telemetry.ClientTelemetryReceiver;
 public class KafkaClientMetricsTelemetryReceiver implements ClientTelemetryReceiver {
 
     private final KafkaClientMetricsTelemetryConfig kafkaClientMetricsTelemetryConfig;
-    private final MetricsForwarder metricsForwarder;
+    private final MetricsExporter metricsExporter;
 
     public KafkaClientMetricsTelemetryReceiver(KafkaClientMetricsTelemetryConfig kafkaClientMetricsTelemetryConfig) {
         this.kafkaClientMetricsTelemetryConfig = kafkaClientMetricsTelemetryConfig;
-        this.metricsForwarder = MetricsForwarderFactory.create(kafkaClientMetricsTelemetryConfig);
+        this.metricsExporter = MetricsExporterFactory.create(kafkaClientMetricsTelemetryConfig);
 
     }
 
@@ -24,6 +24,6 @@ public class KafkaClientMetricsTelemetryReceiver implements ClientTelemetryRecei
                 kafkaClientMetricsTelemetryConfig.metadata.toString(),
                 System.currentTimeMillis()
         );
-        metricsForwarder.forward(enrichedPayload);
+        metricsExporter.forward(enrichedPayload);
     }
 }

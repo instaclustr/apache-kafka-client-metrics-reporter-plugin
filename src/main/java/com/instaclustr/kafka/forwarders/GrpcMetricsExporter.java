@@ -4,12 +4,12 @@ import com.instaclustr.kafka.KafkaClientMetricsTelemetryPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class GrpcMetricsForwarder implements MetricsForwarder {
+public class GrpcMetricsExporter implements MetricsExporter {
     private final String endpoint;
     private final int timeout;
-    private final Logger logger = LoggerFactory.getLogger(GrpcMetricsForwarder.class);
+    private final Logger logger = LoggerFactory.getLogger(GrpcMetricsExporter.class);
 
-    public GrpcMetricsForwarder(String endpoint, int timeout) {
+    public GrpcMetricsExporter(String endpoint, int timeout) {
         this.endpoint = endpoint;
         this.timeout = timeout;
     }

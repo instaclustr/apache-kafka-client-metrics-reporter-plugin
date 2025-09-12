@@ -6,10 +6,10 @@ import java.io.IOException;
 import java.util.Map;
 
 public class KafkaClientMetricsTelemetryConfig {
-    public Forwarder forwarder;
+    public Exporter exporter;
     public Map<String, Object> metadata;
 
-    public static class Forwarder {
+    public static class Exporter {
         public enum Mode { HTTP, GRPC, LOG }
         public Mode mode;
         public int timeout;
@@ -24,13 +24,13 @@ public class KafkaClientMetricsTelemetryConfig {
             KafkaClientMetricsTelemetryConfig config = new KafkaClientMetricsTelemetryConfig();
 
             Map<String, Object> forwarderMap = (Map<String, Object>) obj.get("forwarder");
-            config.forwarder = new Forwarder();
-            config.forwarder.mode = Forwarder.Mode.valueOf(((String) forwarderMap.get("mode")).toUpperCase());
-            config.forwarder.timeout = (int) forwarderMap.get("timeout");
-            config.forwarder.logPath = (String) forwarderMap.get("logPath");
-            config.forwarder.endpoint = (String) forwarderMap.get("endpoint");
+            config.exporter = new Exporter();
+            config.exporter.mode = Exporter.Mode.valueOf(((String) forwarderMap.get("mode")).toUpperCase());
+            config.exporter.timeout = (int) forwarderMap.get("timeout");
+            config.exporter.logPath = (String) forwarderMap.get("logPath");
+            config.exporter.endpoint = (String) forwarderMap.get("endpoint");
 
-            config.metadata = (Map<String, Object>) obj.get("metdata");
+            config.metadata = (Map<String, Object>) obj.get("metadata");
 
             return config;
         } catch (IOException e) {

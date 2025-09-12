@@ -4,11 +4,11 @@ import com.instaclustr.kafka.KafkaClientMetricsTelemetryPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class LogMetricsForwarder implements MetricsForwarder {
+public class LogMetricsExporter implements MetricsExporter {
     private final String logPath;
-    private final Logger logger = LoggerFactory.getLogger(LogMetricsForwarder.class);
+    private final Logger logger = LoggerFactory.getLogger(LogMetricsExporter.class);
 
-    public LogMetricsForwarder(String logPath) {
+    public LogMetricsExporter(String logPath) {
         this.logPath = logPath != null ? logPath : "/lib/default-metrics.log";
     }
 
