@@ -29,35 +29,40 @@ public class HttpMetricsExporter implements MetricsExporter {
     @Override
     public void export(ClientTelemetryPayload payload) {
 
-        ByteBuffer byteBuffer = payload.data();
-        byte[] bytes;
+        try {
+            ByteBuffer byteBuffer = payload.data();
+            byte[] bytes;
 
-        if (byteBuffer.hasArray()) {
-            bytes = byteBuffer.array();
-        } else {
-            bytes = new byte[byteBuffer.remaining()];
-            byteBuffer.get(bytes);
+            if (byteBuffer.hasArray()) {
+                bytes = byteBuffer.array();
+            } else {
+                bytes = new byte[byteBuffer.remaining()];
+                byteBuffer.get(bytes);
+            }
+
+            String payloadAsString = new String(bytes, StandardCharsets.UTF_8);
+            logger.info("Original Payload: {}", payloadAsString);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(endpoint))
+                    .header("Content-Type", "application/x-protobuf")
+                    .POST(HttpRequest.BodyPublishers.ofByteArray(bytes))
+                    .build();
+
+            httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                    .thenApply(response -> {
+                        logger.info("OTLP metrics endpoint response status code: " + response.statusCode());
+                        logger.debug("OTLP metrics endpoint response: {}", response.body());
+                        return response;
+                    })
+                    .thenApply(HttpResponse::body)
+                    .exceptionally(ex -> {
+                        logger.error("Error invoking the OTLP metrics endpoint", ex);
+                        return null;
+                    });
+
+        } catch (final Exception e) {
+            logger.error("Error exporting OTLP metrics to {}: {}", endpoint, e.getMessage(), e);
         }
-
-        String payloadAsString = new String(bytes, StandardCharsets.UTF_8);
-        logger.info("Original Payload: {}", payloadAsString);
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(endpoint))
-                .header("Content-Type", "application/x-protobuf")
-                .POST(HttpRequest.BodyPublishers.ofByteArray(bytes))
-                .build();
-
-        httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .thenApply(response -> {
-                    logger.info("OTLP metrics endpoint response status code: " + response.statusCode());
-                    logger.debug("OTLP metrics endpoint response: {}", response.body());
-                    return response;
-                })
-                .thenApply(HttpResponse::body)
-                .exceptionally(ex -> {
-                    logger.error("Error invoking the OTLP metrics endpoint", ex);
-                    return null;
-                });
     }
 }
