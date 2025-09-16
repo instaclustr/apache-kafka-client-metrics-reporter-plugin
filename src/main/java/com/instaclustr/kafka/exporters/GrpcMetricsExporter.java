@@ -1,4 +1,4 @@
-package com.instaclustr.kafka.forwarders;
+package com.instaclustr.kafka.exporters;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;

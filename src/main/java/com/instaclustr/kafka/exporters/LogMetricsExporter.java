@@ -1,4 +1,4 @@
-package com.instaclustr.kafka.forwarders;
+package com.instaclustr.kafka.exporters;
 
 import org.apache.kafka.server.telemetry.ClientTelemetryPayload;
 import org.slf4j.Logger;
