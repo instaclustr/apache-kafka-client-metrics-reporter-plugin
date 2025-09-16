@@ -97,7 +97,6 @@ public class HttpMetricsExporter implements MetricsExporter {
         } else if (value instanceof Double) {
             b.setDoubleValue((Double) value);
         } else {
-            // fallback
             b.setStringValue(value.toString());
         }
         return b.build();

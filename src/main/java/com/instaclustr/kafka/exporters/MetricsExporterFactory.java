@@ -28,13 +28,7 @@ public class MetricsExporterFactory {
                         (int) exporterMap.get("timeout"),
                         metadata
                 );
-            case "GRPC":
-                return new GrpcMetricsExporter(
-                        (String) exporterMap.get("endpoint"),
-                        (int) exporterMap.get("timeout")
-                );
-            case "LOG":
-                return new LogMetricsExporter((String) exporterMap.get("logPath"));
+
             default:
                 throw new IllegalArgumentException("Unknown mode: " + exporterMap.get("mode"));
         }
