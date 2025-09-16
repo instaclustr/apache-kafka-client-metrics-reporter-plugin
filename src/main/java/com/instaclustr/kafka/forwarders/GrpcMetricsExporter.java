@@ -1,13 +1,14 @@
 package com.instaclustr.kafka.forwarders;
 
-import com.instaclustr.kafka.KafkaClientMetricsReporterPayload;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
 import io.opentelemetry.proto.collector.metrics.v1.MetricsServiceGrpc;
+import org.apache.kafka.server.telemetry.ClientTelemetryPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
 
 public class GrpcMetricsExporter implements MetricsExporter {
@@ -30,10 +31,19 @@ public class GrpcMetricsExporter implements MetricsExporter {
     }
 
     @Override
-    public void export(KafkaClientMetricsReporterPayload payload) {
+    public void export(ClientTelemetryPayload payload) {
         try {
+            ByteBuffer byteBuffer = payload.data();
+            byte[] bytes;
 
-            ExportMetricsServiceRequest req = ExportMetricsServiceRequest.parseFrom((byte[]) payload.originalPayload);
+            if (byteBuffer.hasArray()) {
+                bytes = byteBuffer.array();
+            } else {
+                bytes = new byte[byteBuffer.remaining()];
+                byteBuffer.get(bytes);
+            }
+
+            ExportMetricsServiceRequest req = ExportMetricsServiceRequest.parseFrom(bytes);
 
             stub.export(req);
             logger.info("Successfully exported {} ResourceMetrics to {}",

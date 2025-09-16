@@ -16,27 +16,27 @@ public class KafkaClientMetricsReporter implements MetricsReporter, ClientTeleme
 
     @Override
     public void init(List<KafkaMetric> metrics) {
-        logger.info("Initializing the client metric reporter: {}", metrics);
+        logger.debug("Initializing the client metric reporter: {}", metrics);
     }
 
     @Override
     public void configure(final Map<String, ?> configs) {
-        logger.info("Configuration of the reporter");
+        logger.debug("Configuration of the reporter");
     }
 
     @Override
     public void metricChange(final KafkaMetric metric) {
-        logger.info("Changing the metric {}", metric.metricName());
+        logger.debug("Changing the metric {}", metric.metricName());
     }
 
     @Override
     public void metricRemoval(final KafkaMetric metric) {
-        logger.info("Removing the metric {}", metric.metricName());
+        logger.debug("Removing the metric {}", metric.metricName());
     }
 
     @Override
     public void close() {
-        logger.info("Closing the reporter");
+        logger.debug("Closing the reporter");
     }
 
     @Override

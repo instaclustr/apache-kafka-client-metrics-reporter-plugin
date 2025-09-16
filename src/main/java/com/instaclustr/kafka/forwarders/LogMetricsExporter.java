@@ -1,6 +1,6 @@
 package com.instaclustr.kafka.forwarders;
 
-import com.instaclustr.kafka.KafkaClientMetricsReporterPayload;
+import org.apache.kafka.server.telemetry.ClientTelemetryPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +13,7 @@ public class LogMetricsExporter implements MetricsExporter {
     }
 
     @Override
-    public void export(KafkaClientMetricsReporterPayload payload) {
+    public void export(ClientTelemetryPayload payload) {
         logger.info("Logging metrics to {}: {}", logPath, payload);
     }
 }

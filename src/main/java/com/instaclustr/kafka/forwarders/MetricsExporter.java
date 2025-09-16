@@ -1,7 +1,7 @@
 package com.instaclustr.kafka.forwarders;
 
-import com.instaclustr.kafka.KafkaClientMetricsReporterPayload;
+import org.apache.kafka.server.telemetry.ClientTelemetryPayload;
 
 public interface MetricsExporter {
-    void export(KafkaClientMetricsReporterPayload payload);
+    void export(ClientTelemetryPayload payload);
 }
