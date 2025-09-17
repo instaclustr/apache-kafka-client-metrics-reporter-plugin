@@ -1,18 +1,13 @@
 package com.instaclustr.kafka.exporters;
 
-import io.opentelemetry.proto.common.v1.AnyValue;
-import io.opentelemetry.proto.common.v1.KeyValue;
-import io.opentelemetry.proto.metrics.v1.MetricsData;
-import io.opentelemetry.proto.resource.v1.Resource;
+import com.instaclustr.kafka.helpers.MetricsMetaDataProcessor;
 import org.apache.kafka.server.telemetry.ClientTelemetryPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.util.Map;
 
@@ -35,12 +30,9 @@ public class HttpMetricsExporter implements MetricsExporter {
     @Override
     public void export(final ClientTelemetryPayload payload) {
         try {
-            final byte[] rawBytes = bufferToBytes(payload.data());
-            MetricsData metricsData = MetricsData.parseFrom(rawBytes);
+            final MetricsMetaDataProcessor processor = new MetricsMetaDataProcessor(metadata);
+            final byte[] finalBytes = processor.processMetricsData(payload.data());
 
-            final byte[] finalBytes = shouldEnrich(metricsData)
-                    ? enrichMetricsData(metricsData)
-                    : rawBytes;
             HttpRequest request = buildRequest(finalBytes);
             sendAsync(request);
         } catch (Exception e) {
@@ -48,59 +40,6 @@ public class HttpMetricsExporter implements MetricsExporter {
         }
     }
 
-    private byte[] bufferToBytes(ByteBuffer buffer) {
-        if (buffer.hasArray()) {
-            return buffer.array();
-        } else {
-            byte[] bytes = new byte[buffer.remaining()];
-            buffer.get(bytes);
-            return bytes;
-        }
-    }
-
-    private boolean shouldEnrich(final MetricsData metricsData) {
-        return !this.metadata.isEmpty() && metricsData.getResourceMetricsCount() > 0;
-    }
-
-    private byte[] enrichMetricsData(MetricsData metricsData) {
-        MetricsData.Builder dataBuilder = metricsData.toBuilder();
-
-        for (int i = 0; i < dataBuilder.getResourceMetricsCount(); i++) {
-            Resource.Builder resourceBuilder =
-                    dataBuilder.getResourceMetricsBuilder(i).getResourceBuilder();
-
-            this.metadata.forEach((key, value) ->
-                    resourceBuilder.addAttributes(toKeyValue(key, value))
-            );
-        }
-
-        return dataBuilder.build().toByteArray();
-    }
-
-    private KeyValue toKeyValue(final String key, final Object value) {
-        return KeyValue.newBuilder()
-                .setKey(key)
-                .setValue(toAnyValue(value))
-                .build();
-    }
-
-    private AnyValue toAnyValue(final Object value) {
-        AnyValue.Builder b = AnyValue.newBuilder();
-        if (value instanceof String) {
-            b.setStringValue((String) value);
-        } else if (value instanceof Boolean) {
-            b.setBoolValue((Boolean) value);
-        } else if (value instanceof Long) {
-            b.setIntValue((Long) value);
-        } else if (value instanceof Integer) {
-            b.setIntValue(((Integer) value).longValue());
-        } else if (value instanceof Double) {
-            b.setDoubleValue((Double) value);
-        } else {
-            b.setStringValue(value.toString());
-        }
-        return b.build();
-    }
 
     private HttpRequest buildRequest(final byte[] payload) {
         return HttpRequest.newBuilder()
