@@ -1,10 +1,10 @@
 package com.instaclustr.kafka.exporters;
 
+import io.opentelemetry.proto.common.v1.AnyValue;
+import io.opentelemetry.proto.common.v1.KeyValue;
+import io.opentelemetry.proto.metrics.v1.MetricsData;
+import io.opentelemetry.proto.resource.v1.Resource;
 import org.apache.kafka.server.telemetry.ClientTelemetryPayload;
-import org.apache.kafka.shaded.io.opentelemetry.proto.common.v1.AnyValue;
-import org.apache.kafka.shaded.io.opentelemetry.proto.common.v1.KeyValue;
-import org.apache.kafka.shaded.io.opentelemetry.proto.metrics.v1.MetricsData;
-import org.apache.kafka.shaded.io.opentelemetry.proto.resource.v1.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
