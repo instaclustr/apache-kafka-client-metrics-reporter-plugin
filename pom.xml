@@ -13,6 +13,7 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <kafka.clients.version>3.9.1</kafka.clients.version>
     </properties>
 
     <dependencies>
@@ -21,12 +22,6 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>2.0.17</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka-clients</artifactId>
-            <version>3.9.1</version>
         </dependency>
 
         <dependency>
@@ -41,7 +36,29 @@
             <version>1.8.0-alpha</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+            <version>${kafka.clients.version}</version>
+        </dependency>
+
     </dependencies>
+
+    <profiles>
+        <profile>
+            <id>kafka-3.9</id>
+            <properties>
+                <kafka.clients.version>3.9.1</kafka.clients.version>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>kafka-4.0</id>
+            <properties>
+                <kafka.clients.version>4.0.0</kafka.clients.version>
+            </properties>
+        </profile>
+    </profiles>
 
     <build>
         <resources>
@@ -57,6 +74,9 @@
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
+                    <finalName>
+                        ${project.artifactId}-${project.version}-kafka-${kafka.clients.version}
+                    </finalName>
                     <archive>
                         <manifest>
                             <mainClass>com.instaclustr.kafka.KafkaClientMetricsReporter</mainClass>
