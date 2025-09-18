@@ -8,6 +8,16 @@ This plugin leverages the [KIP-714: Client Metrics and Observability](https://cw
 This plugin is Open Source under the Apache License 2.0.
 This project is maintained by [Instaclustr NetApp](https://www.instaclustr.com/).
 
+## Prerequisites
+
+1. Apache Kafka 3.7.0 or higher.
+2. Java 17 for the plugin to run.
+3. Maven to build the plugin.
+4. An OpenTelemetry Collector or any HTTP endpoint to push the metrics to.
+5. A client application that supports [KIP-714](https://cwiki.apache.org/confluence/display/KAFKA/KIP-714%3A+Client+metrics+and+observability#KIP714:Clientmetricsandobservability-Clientbehavior) to push the metrics.
+6. The client applications property `enable.metrics.push` should be set to `true`. It will be `true` by default.
+7. A client application that is compatible with the version of Apache Kafka you're using.
+
 ## Using the plugin
 
 1. Download the latest release of the plugin.

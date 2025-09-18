@@ -46,14 +46,21 @@
 
     <profiles>
         <profile>
-            <id>kafka-3.9</id>
+            <id>kafka-3.8.1</id>
+            <properties>
+                <kafka.clients.version>3.8.1</kafka.clients.version>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>kafka-3.9.1</id>
             <properties>
                 <kafka.clients.version>3.9.1</kafka.clients.version>
             </properties>
         </profile>
 
         <profile>
-            <id>kafka-4.0</id>
+            <id>kafka-4.0.0</id>
             <properties>
                 <kafka.clients.version>4.0.0</kafka.clients.version>
             </properties>
