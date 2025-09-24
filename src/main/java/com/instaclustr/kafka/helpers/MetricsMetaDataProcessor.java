@@ -26,10 +26,7 @@ public class MetricsMetaDataProcessor {
 
         try {
             MetricsData metricsData = MetricsData.parseFrom(rawBytes);
-
-            if (shouldEnrich(metricsData)) {
-                return enrichMetricsData(requestContext, metricsData);
-            }
+            return enrichMetricsData(requestContext, metricsData);
         } catch (Exception e) {
             logger.error("Error processing metrics data: {}", e.getMessage(), e);
         }
@@ -47,15 +44,17 @@ public class MetricsMetaDataProcessor {
         }
     }
 
-    private boolean shouldEnrich(final MetricsData metricsData) {
+    private boolean shouldEnrichStaticMetaData(final MetricsData metricsData) {
         return !this.metadata.isEmpty() && metricsData.getResourceMetricsCount() > 0;
     }
 
-    private byte[] enrichMetricsData(final AuthorizableRequestContext requestContext, MetricsData metricsData) {
+    private byte[] enrichMetricsData(final AuthorizableRequestContext context, MetricsData metricsData) {
         MetricsData.Builder dataBuilder = metricsData.toBuilder();
 
-        enrichStaticMetadata(dataBuilder);
-        enrichDynamicMetadata(requestContext, dataBuilder);
+        if(shouldEnrichStaticMetaData(metricsData)){
+            enrichStaticMetadata(dataBuilder);
+        }
+        enrichDynamicMetadata(context, dataBuilder);
 
         return dataBuilder.build().toByteArray();
     }
@@ -72,9 +71,10 @@ public class MetricsMetaDataProcessor {
     }
 
     private void enrichDynamicMetadata(final AuthorizableRequestContext context, MetricsData.Builder dataBuilder) {
-        Map<String, String> dynamicMetadata = new HashMap<>();
+
         final RequestContext requestContext = (RequestContext) context;
 
+        Map<String, String> dynamicMetadata = new HashMap<>();
         if (requestContext.clientId() != null) {
             dynamicMetadata.put("clientId", requestContext.clientId());
         }
