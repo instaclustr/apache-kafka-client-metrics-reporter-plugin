@@ -76,14 +76,13 @@ public class MetricsMetaDataProcessor {
         final RequestContext requestContext = (RequestContext) context;
 
         if (requestContext.clientId() != null) {
-            dynamicMetadata.put("CLIENT_ID", requestContext.clientId());
+            dynamicMetadata.put("clientId", requestContext.clientId());
         }
         if (requestContext.clientInformation != null) {
-            dynamicMetadata.put("CLIENT_SOFTWARE_NAME", requestContext.clientInformation.softwareName());
-            dynamicMetadata.put("CLIENT_SOFTWARE_VERSION", requestContext.clientInformation.softwareVersion());
+            dynamicMetadata.put("clientSoftwareName", requestContext.clientInformation.softwareName());
+            dynamicMetadata.put("clientSoftwareVersion", requestContext.clientInformation.softwareVersion());
         }
 
-        // Append labels to resource metrics
         for (int i = 0; i < dataBuilder.getResourceMetricsCount(); i++) {
             Resource.Builder resourceBuilder = dataBuilder.getResourceMetricsBuilder(i).getResourceBuilder();
             dynamicMetadata.forEach((key, value) -> resourceBuilder.addAttributes(
