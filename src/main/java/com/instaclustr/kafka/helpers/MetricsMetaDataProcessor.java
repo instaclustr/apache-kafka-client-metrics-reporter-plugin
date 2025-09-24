@@ -2,10 +2,13 @@ package com.instaclustr.kafka.helpers;
 
 import io.opentelemetry.proto.metrics.v1.MetricsData;
 import io.opentelemetry.proto.resource.v1.Resource;
+import org.apache.kafka.common.requests.RequestContext;
+import org.apache.kafka.server.authorizer.AuthorizableRequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
+import java.util.HashMap;
 import java.util.Map;
 import io.opentelemetry.proto.common.v1.AnyValue;
 import io.opentelemetry.proto.common.v1.KeyValue;
@@ -18,16 +21,17 @@ public class MetricsMetaDataProcessor {
         this.metadata = metadata;
     }
 
-    public byte[] processMetricsData(final ByteBuffer buffer) {
+    public byte[] processMetricsData(final AuthorizableRequestContext requestContext, final ByteBuffer buffer) {
         final byte[] rawBytes = bufferToBytes(buffer);
 
-        if (shouldEnrich(rawBytes)) {
-            try {
-                MetricsData metricsData = MetricsData.parseFrom(rawBytes);
-                return enrichMetricsData(metricsData);
-            } catch (Exception e) {
-                logger.error("Error enriching metrics data: {}", e.getMessage(), e);
+        try {
+            MetricsData metricsData = MetricsData.parseFrom(rawBytes);
+
+            if (shouldEnrich(metricsData)) {
+                return enrichMetricsData(requestContext, metricsData);
             }
+        } catch (Exception e) {
+            logger.error("Error processing metrics data: {}", e.getMessage(), e);
         }
 
         return rawBytes;
@@ -43,19 +47,20 @@ public class MetricsMetaDataProcessor {
         }
     }
 
-    private boolean shouldEnrich(final byte[] rawBytes) {
-        try {
-            final MetricsData metricsData = MetricsData.parseFrom(rawBytes);
-            return !this.metadata.isEmpty() && metricsData.getResourceMetricsCount() > 0;
-        } catch (final Exception ex) {
-            logger.error("Error checking if should enrich metrics data: {}", ex.getMessage(), ex);
-            return false;
-        }
+    private boolean shouldEnrich(final MetricsData metricsData) {
+        return !this.metadata.isEmpty() && metricsData.getResourceMetricsCount() > 0;
     }
 
-    private byte[] enrichMetricsData(MetricsData metricsData) {
+    private byte[] enrichMetricsData(final AuthorizableRequestContext requestContext, MetricsData metricsData) {
         MetricsData.Builder dataBuilder = metricsData.toBuilder();
 
+        enrichStaticMetadata(dataBuilder);
+        enrichDynamicMetadata(requestContext, dataBuilder);
+
+        return dataBuilder.build().toByteArray();
+    }
+
+    private void enrichStaticMetadata(MetricsData.Builder dataBuilder) {
         for (int i = 0; i < dataBuilder.getResourceMetricsCount(); i++) {
             Resource.Builder resourceBuilder =
                     dataBuilder.getResourceMetricsBuilder(i).getResourceBuilder();
@@ -64,8 +69,30 @@ public class MetricsMetaDataProcessor {
                     resourceBuilder.addAttributes(toKeyValue(key, value))
             );
         }
+    }
 
-        return dataBuilder.build().toByteArray();
+    private void enrichDynamicMetadata(final AuthorizableRequestContext context, MetricsData.Builder dataBuilder) {
+        Map<String, String> dynamicMetadata = new HashMap<>();
+        final RequestContext requestContext = (RequestContext) context;
+
+        if (requestContext.clientId() != null) {
+            dynamicMetadata.put("CLIENT_ID", requestContext.clientId());
+        }
+        if (requestContext.clientInformation != null) {
+            dynamicMetadata.put("CLIENT_SOFTWARE_NAME", requestContext.clientInformation.softwareName());
+            dynamicMetadata.put("CLIENT_SOFTWARE_VERSION", requestContext.clientInformation.softwareVersion());
+        }
+
+        // Append labels to resource metrics
+        for (int i = 0; i < dataBuilder.getResourceMetricsCount(); i++) {
+            Resource.Builder resourceBuilder = dataBuilder.getResourceMetricsBuilder(i).getResourceBuilder();
+            dynamicMetadata.forEach((key, value) -> resourceBuilder.addAttributes(
+                    KeyValue.newBuilder()
+                            .setKey(key)
+                            .setValue(AnyValue.newBuilder().setStringValue(value))
+                            .build()
+            ));
+        }
     }
 
     private KeyValue toKeyValue(final String key, final Object value) {

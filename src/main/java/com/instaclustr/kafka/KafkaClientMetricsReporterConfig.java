@@ -17,8 +17,10 @@ public class KafkaClientMetricsReporterConfig {
             Yaml yaml = new Yaml();
             final String kafkaClientMetricsConfigFilePath = System.getenv("KAFKA_CLIENT_METRICS_CONFIG_PATH");
             logger.debug("Loading telemetry config from: {}", kafkaClientMetricsConfigFilePath);
-            final FileInputStream fis = new FileInputStream(kafkaClientMetricsConfigFilePath);
-            this.configurations = yaml.load(fis);
+
+            try (FileInputStream fis = new FileInputStream(kafkaClientMetricsConfigFilePath)) {
+                this.configurations = yaml.load(fis);
+            }
 
         } catch (final Exception ex) {
             logger.debug("Failed to load telemetry config", ex);

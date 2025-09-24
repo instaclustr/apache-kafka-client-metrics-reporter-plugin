@@ -1,6 +1,7 @@
 package com.instaclustr.kafka.exporters;
 
 import com.instaclustr.kafka.helpers.MetricsMetaDataProcessor;
+import org.apache.kafka.server.authorizer.AuthorizableRequestContext;
 import org.apache.kafka.server.telemetry.ClientTelemetryPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,10 +29,10 @@ public class HttpMetricsExporter implements MetricsExporter {
     }
 
     @Override
-    public void export(final ClientTelemetryPayload payload) {
+    public void export(final AuthorizableRequestContext requestContext, final ClientTelemetryPayload payload) {
         try {
             final MetricsMetaDataProcessor processor = new MetricsMetaDataProcessor(metadata);
-            final byte[] finalBytes = processor.processMetricsData(payload.data());
+            final byte[] finalBytes = processor.processMetricsData(requestContext, payload.data());
 
             HttpRequest request = buildRequest(finalBytes);
             sendAsync(request);

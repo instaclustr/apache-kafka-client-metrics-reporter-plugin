@@ -21,8 +21,8 @@ public class KafkaClientMetricsReporterReceiver implements ClientTelemetryReceiv
     }
 
     @Override
-    public void exportMetrics(AuthorizableRequestContext requestContext, ClientTelemetryPayload telemetryPayload) {
-        metricsExporter.export(telemetryPayload);
+    public void exportMetrics(final AuthorizableRequestContext requestContext, final ClientTelemetryPayload telemetryPayload) {
+        metricsExporter.export(requestContext, telemetryPayload);
     }
 }
 
