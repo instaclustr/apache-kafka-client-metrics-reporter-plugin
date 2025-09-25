@@ -70,14 +70,19 @@ public class MetricsMetaDataProcessorTest {
 
     @Test
     public void testProcessMetricsDataEnrichData() throws Exception {
+        // Create Mock MetricsData with Static and Dynamic metadata
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("staticKey", "staticValue");
         MetricsData metricsData = createMetricsDataWithResource();
         ByteBuffer buffer = toByteBuffer(metricsData);
+
+        // Process and Enrich
         MetricsMetaDataProcessor processor = new MetricsMetaDataProcessor(metadata);
         RequestContext context = getRequestContext();
         byte[] enrichedBytes = processor.processMetricsData(context, buffer);
         MetricsData enrichedData = MetricsData.parseFrom(enrichedBytes);
+
+        // Assert Static metadata enrichment
         Assert.assertTrue(enrichedData.getResourceMetricsCount() > 0);
         enrichedData.getResourceMetricsList().forEach(resourceMetrics -> {
             Resource resource = resourceMetrics.getResource();
@@ -85,6 +90,8 @@ public class MetricsMetaDataProcessorTest {
                     .anyMatch(kv -> kv.getKey().equals("staticKey") &&
                             kv.getValue().getStringValue().equals("staticValue"));
             Assert.assertTrue(foundStatic, "Missing static metadata attribute");
+
+            // Assert Dynamic metadata enrichment
             boolean foundClientId = resource.getAttributesList().stream()
                     .anyMatch(kv -> kv.getKey().equals("clientId") &&
                             kv.getValue().getStringValue().equals("client-123"));

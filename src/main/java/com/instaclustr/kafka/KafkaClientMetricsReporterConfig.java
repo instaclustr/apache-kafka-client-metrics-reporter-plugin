@@ -13,12 +13,15 @@ public class KafkaClientMetricsReporterConfig {
     private static final Logger logger = LoggerFactory.getLogger(KafkaClientMetricsReporterConfig.class);
 
     public KafkaClientMetricsReporterConfig() {
+        this(System.getenv("KAFKA_CLIENT_METRICS_CONFIG_PATH"));
+    }
+
+    public KafkaClientMetricsReporterConfig(String configFilePath) {
         try {
             Yaml yaml = new Yaml();
-            final String kafkaClientMetricsConfigFilePath = System.getenv("KAFKA_CLIENT_METRICS_CONFIG_PATH");
-            logger.debug("Loading telemetry config from: {}", kafkaClientMetricsConfigFilePath);
+            logger.debug("Loading telemetry config from: {}", configFilePath);
 
-            try (FileInputStream fis = new FileInputStream(kafkaClientMetricsConfigFilePath)) {
+            try (FileInputStream fis = new FileInputStream(configFilePath)) {
                 this.configurations = yaml.load(fis);
             }
 
