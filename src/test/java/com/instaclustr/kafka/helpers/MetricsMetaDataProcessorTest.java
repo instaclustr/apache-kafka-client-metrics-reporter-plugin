@@ -14,6 +14,7 @@ limitations under the License.
 
 package com.instaclustr.kafka.helpers;
 
+import com.google.protobuf.InvalidProtocolBufferException;
 import io.opentelemetry.proto.metrics.v1.MetricsData;
 import io.opentelemetry.proto.resource.v1.Resource;
 import io.opentelemetry.proto.metrics.v1.ResourceMetrics;
@@ -34,6 +35,8 @@ import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class MetricsMetaDataProcessorTest {
 
@@ -73,13 +76,23 @@ public class MetricsMetaDataProcessorTest {
     }
 
     @Test
-    public void testProcessMetricsDataNoEnrichmentDueToEmptyMetadata() {
+    public void testProcessMetricsDataNoEnrichmentDueToEmptyMetadata() throws InvalidProtocolBufferException {
+        Set<String> expectedKeys = Set.of("clientId", "clientSoftwareName", "clientSoftwareVersion");
+
         MetricsData metricsData = createMetricsDataWithNoResource();
         ByteBuffer buffer = toByteBuffer(metricsData);
         MetricsMetaDataProcessor processor = new MetricsMetaDataProcessor(Collections.emptyMap());
         RequestContext context = getRequestContext();
         byte[] resultBytes = processor.processMetricsData(context, buffer);
-        Assert.assertEquals(resultBytes, metricsData.toByteArray());
+        MetricsData enrichedData = MetricsData.parseFrom(resultBytes);
+        enrichedData.getResourceMetricsList().forEach(resourceMetrics -> {
+            Resource resource = resourceMetrics.getResource();
+            Set<String> actualKeys = resource.getAttributesList()
+                    .stream()
+                    .map(kv -> kv.getKey())
+                    .collect(Collectors.toSet());
+            Assert.assertEquals(actualKeys, expectedKeys, "Resource attributes do not match expected client attributes");
+        });
     }
 
     @Test
