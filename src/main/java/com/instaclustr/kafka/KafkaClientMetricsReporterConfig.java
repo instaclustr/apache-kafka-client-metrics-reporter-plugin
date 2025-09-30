@@ -33,7 +33,7 @@ public class KafkaClientMetricsReporterConfig {
     public KafkaClientMetricsReporterConfig(String configFilePath) {
         try {
             Yaml yaml = new Yaml();
-            logger.debug("Loading telemetry config from: {}", configFilePath);
+            logger.info("Loading telemetry config from: {}", configFilePath);
 
             try (FileInputStream fis = new FileInputStream(configFilePath)) {
                 this.configurations = yaml.load(fis);

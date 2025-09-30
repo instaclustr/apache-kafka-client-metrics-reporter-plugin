@@ -67,7 +67,7 @@ public class HttpMetricsExporter implements MetricsExporter {
     private void sendAsync(final HttpRequest request) {
         httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenAccept(response -> {
-                    logger.info("OTLP metrics endpoint status: {}", response.statusCode());
+                    logger.debug("OTLP metrics endpoint status: {}", response.statusCode());
                     logger.debug("Response body: {}", response.body());
                 })
                 .exceptionally(ex -> {
