@@ -14,18 +14,18 @@ limitations under the License.
 
 package com.instaclustr.kafka.helpers;
 
-import io.opentelemetry.proto.metrics.v1.MetricsData;
-import io.opentelemetry.proto.resource.v1.Resource;
 import org.apache.kafka.common.requests.RequestContext;
 import org.apache.kafka.server.authorizer.AuthorizableRequestContext;
+import org.apache.kafka.shaded.io.opentelemetry.proto.common.v1.AnyValue;
+import org.apache.kafka.shaded.io.opentelemetry.proto.common.v1.KeyValue;
+import org.apache.kafka.shaded.io.opentelemetry.proto.metrics.v1.MetricsData;
+import org.apache.kafka.shaded.io.opentelemetry.proto.resource.v1.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
-import io.opentelemetry.proto.common.v1.AnyValue;
-import io.opentelemetry.proto.common.v1.KeyValue;
 
 public class MetricsMetaDataProcessor {
     private static final Logger logger = LoggerFactory.getLogger(MetricsMetaDataProcessor.class);

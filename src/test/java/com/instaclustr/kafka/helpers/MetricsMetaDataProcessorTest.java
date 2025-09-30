@@ -14,10 +14,6 @@ limitations under the License.
 
 package com.instaclustr.kafka.helpers;
 
-import com.google.protobuf.InvalidProtocolBufferException;
-import io.opentelemetry.proto.metrics.v1.MetricsData;
-import io.opentelemetry.proto.resource.v1.Resource;
-import io.opentelemetry.proto.metrics.v1.ResourceMetrics;
 import org.apache.kafka.common.network.ClientInformation;
 import org.apache.kafka.common.network.ListenerName;
 import org.apache.kafka.common.protocol.ApiKeys;
@@ -25,6 +21,12 @@ import org.apache.kafka.common.requests.RequestContext;
 import org.apache.kafka.common.requests.RequestHeader;
 import org.apache.kafka.common.security.auth.KafkaPrincipal;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
+import org.apache.kafka.shaded.com.google.protobuf.InvalidProtocolBufferException;
+import org.apache.kafka.shaded.io.opentelemetry.proto.common.v1.AnyValue;
+import org.apache.kafka.shaded.io.opentelemetry.proto.common.v1.KeyValue;
+import org.apache.kafka.shaded.io.opentelemetry.proto.metrics.v1.MetricsData;
+import org.apache.kafka.shaded.io.opentelemetry.proto.metrics.v1.ResourceMetrics;
+import org.apache.kafka.shaded.io.opentelemetry.proto.resource.v1.Resource;
 import org.mockito.MockitoAnnotations;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -53,9 +55,9 @@ public class MetricsMetaDataProcessorTest {
 
     private MetricsData createMetricsDataWithResource() {
         Resource resource = Resource.newBuilder()
-                .addAttributes(io.opentelemetry.proto.common.v1.KeyValue.newBuilder()
+                .addAttributes(KeyValue.newBuilder()
                         .setKey("dummy")
-                        .setValue(io.opentelemetry.proto.common.v1.AnyValue.newBuilder().setStringValue("dummyValue").build())
+                        .setValue(AnyValue.newBuilder().setStringValue("dummyValue").build())
                         .build())
                 .build();
         ResourceMetrics resourceMetrics = ResourceMetrics.newBuilder()
