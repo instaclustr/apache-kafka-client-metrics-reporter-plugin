@@ -50,7 +50,7 @@ public class HttpMetricsExporter implements MetricsExporter {
 
             HttpRequest request = buildRequest(finalBytes);
             sendAsync(request);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             logger.error("Error exporting OTLP metrics to {}: {}", endpoint, e.getMessage(), e);
         }
     }

@@ -40,12 +40,12 @@ public class KafkaClientMetricsReporter implements MetricsReporter, ClientTeleme
 
     @Override
     public void metricChange(final KafkaMetric metric) {
-        logger.info("Changing the metric {}", metric.metricName());
+        logger.debug("Changing the metric {}", metric.metricName());
     }
 
     @Override
     public void metricRemoval(final KafkaMetric metric) {
-        logger.info("Removing the metric {}", metric.metricName());
+        logger.debug("Removing the metric {}", metric.metricName());
     }
 
     @Override
