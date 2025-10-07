@@ -1,0 +1,163 @@
+/*
+Copyright 2021 Instaclustr Pty Ltd
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+ */
+
+package com.instaclustr.kafka.helpers;
+
+import org.apache.kafka.common.network.ClientInformation;
+import org.apache.kafka.common.network.ListenerName;
+import org.apache.kafka.common.protocol.ApiKeys;
+import org.apache.kafka.common.requests.RequestContext;
+import org.apache.kafka.common.requests.RequestHeader;
+import org.apache.kafka.common.security.auth.KafkaPrincipal;
+import org.apache.kafka.common.security.auth.SecurityProtocol;
+import org.apache.kafka.shaded.com.google.protobuf.InvalidProtocolBufferException;
+import org.apache.kafka.shaded.io.opentelemetry.proto.common.v1.AnyValue;
+import org.apache.kafka.shaded.io.opentelemetry.proto.common.v1.KeyValue;
+import org.apache.kafka.shaded.io.opentelemetry.proto.metrics.v1.MetricsData;
+import org.apache.kafka.shaded.io.opentelemetry.proto.metrics.v1.ResourceMetrics;
+import org.apache.kafka.shaded.io.opentelemetry.proto.resource.v1.Resource;
+import org.mockito.MockitoAnnotations;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import java.net.InetAddress;
+import java.nio.ByteBuffer;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+public class MetricsMetaDataProcessorTest {
+
+
+    private MetricsData createMetricsDataWithNoResource() {
+        Resource resource = Resource.newBuilder().build();
+        ResourceMetrics resourceMetrics = ResourceMetrics.newBuilder()
+                .setResource(resource)
+                .build();
+        return MetricsData.newBuilder()
+                .addResourceMetrics(resourceMetrics)
+                .build();
+    }
+
+    private MetricsData createMetricsDataWithResource() {
+        Resource resource = Resource.newBuilder()
+                .addAttributes(KeyValue.newBuilder()
+                        .setKey("dummy")
+                        .setValue(AnyValue.newBuilder().setStringValue("dummyValue").build())
+                        .build())
+                .build();
+        ResourceMetrics resourceMetrics = ResourceMetrics.newBuilder()
+                .setResource(resource)
+                .build();
+        return MetricsData.newBuilder()
+                .addResourceMetrics(resourceMetrics)
+                .build();
+    }
+
+    private ByteBuffer toByteBuffer(MetricsData data) {
+        return ByteBuffer.wrap(data.toByteArray());
+    }
+
+    @BeforeMethod
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testProcessMetricsDataNoEnrichmentDueToEmptyMetadata() throws InvalidProtocolBufferException {
+        Set<String> expectedKeys = Set.of("clientId", "clientSoftwareName", "clientSoftwareVersion");
+
+        MetricsData metricsData = createMetricsDataWithNoResource();
+        ByteBuffer buffer = toByteBuffer(metricsData);
+        MetricsMetaDataProcessor processor = new MetricsMetaDataProcessor(Collections.emptyMap());
+        RequestContext context = getRequestContext();
+        byte[] resultBytes = processor.processMetricsData(context, buffer);
+        MetricsData enrichedData = MetricsData.parseFrom(resultBytes);
+        enrichedData.getResourceMetricsList().forEach(resourceMetrics -> {
+            Resource resource = resourceMetrics.getResource();
+            Set<String> actualKeys = resource.getAttributesList()
+                    .stream()
+                    .map(kv -> kv.getKey())
+                    .collect(Collectors.toSet());
+            Assert.assertEquals(actualKeys, expectedKeys, "Resource attributes do not match expected client attributes");
+        });
+    }
+
+    @Test
+    public void testProcessMetricsDataEnrichData() throws Exception {
+        // Create Mock MetricsData with Static and Dynamic metadata
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("staticKey", "staticValue");
+        MetricsData metricsData = createMetricsDataWithResource();
+        ByteBuffer buffer = toByteBuffer(metricsData);
+
+        // Process and Enrich
+        MetricsMetaDataProcessor processor = new MetricsMetaDataProcessor(metadata);
+        RequestContext context = getRequestContext();
+        byte[] enrichedBytes = processor.processMetricsData(context, buffer);
+        MetricsData enrichedData = MetricsData.parseFrom(enrichedBytes);
+
+        // Assert Static metadata enrichment
+        Assert.assertTrue(enrichedData.getResourceMetricsCount() > 0);
+        enrichedData.getResourceMetricsList().forEach(resourceMetrics -> {
+            Resource resource = resourceMetrics.getResource();
+            boolean foundStatic = resource.getAttributesList().stream()
+                    .anyMatch(kv -> kv.getKey().equals("staticKey") &&
+                            kv.getValue().getStringValue().equals("staticValue"));
+            Assert.assertTrue(foundStatic, "Missing static metadata attribute");
+
+            // Assert Dynamic metadata enrichment
+            boolean foundClientId = resource.getAttributesList().stream()
+                    .anyMatch(kv -> kv.getKey().equals("clientId") &&
+                            kv.getValue().getStringValue().equals("client-123"));
+            Assert.assertTrue(foundClientId, "Missing dynamic metadata clientId");
+            boolean foundClientSoftwareName = resource.getAttributesList().stream()
+                    .anyMatch(kv -> kv.getKey().equals("clientSoftwareName") &&
+                            kv.getValue().getStringValue().equals("kafkaClient"));
+            Assert.assertTrue(foundClientSoftwareName, "Missing dynamic metadata clientSoftwareName");
+            boolean foundClientSoftwareVersion = resource.getAttributesList().stream()
+                    .anyMatch(kv -> kv.getKey().equals("clientSoftwareVersion") &&
+                            kv.getValue().getStringValue().equals("1.0.0"));
+            Assert.assertTrue(foundClientSoftwareVersion, "Missing dynamic metadata clientSoftwareVersion");
+        });
+    }
+
+    private static RequestContext getRequestContext() {
+        RequestHeader header = new RequestHeader(
+                ApiKeys.METADATA,
+                (short) 0,
+                "client-123",
+                42
+        );
+
+        KafkaPrincipal principal = new KafkaPrincipal("User", "test-user");
+        ListenerName listenerName = ListenerName.forSecurityProtocol(SecurityProtocol.PLAINTEXT);
+        SecurityProtocol securityProtocol = SecurityProtocol.PLAINTEXT;
+        ClientInformation clientInformation = new ClientInformation("kafkaClient", "1.0.0");
+
+        return new RequestContext(
+                header,
+                "conn-1",
+                InetAddress.getLoopbackAddress(),
+                principal,
+                listenerName,
+                securityProtocol,
+                clientInformation,
+                false
+        );
+    }
+}
