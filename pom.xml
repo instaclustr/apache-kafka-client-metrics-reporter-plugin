@@ -94,6 +94,13 @@
                 <kafka.clients.version>4.0.0</kafka.clients.version>
             </properties>
         </profile>
+
+        <profile>
+            <id>kafka-4.1.1</id>
+            <properties>
+                <kafka.clients.version>4.1.1</kafka.clients.version>
+            </properties>
+        </profile>
     </profiles>
 
     <build>
