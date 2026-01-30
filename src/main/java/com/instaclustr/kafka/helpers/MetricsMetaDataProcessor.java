@@ -14,7 +14,10 @@ limitations under the License.
 
 package com.instaclustr.kafka.helpers;
 
+import org.apache.kafka.common.compress.Compression;
+import org.apache.kafka.common.record.CompressionType;
 import org.apache.kafka.common.requests.RequestContext;
+import org.apache.kafka.common.utils.BufferSupplier;
 import org.apache.kafka.server.authorizer.AuthorizableRequestContext;
 import org.apache.kafka.shaded.io.opentelemetry.proto.common.v1.AnyValue;
 import org.apache.kafka.shaded.io.opentelemetry.proto.common.v1.KeyValue;
@@ -23,6 +26,8 @@ import org.apache.kafka.shaded.io.opentelemetry.proto.resource.v1.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,29 +36,90 @@ public class MetricsMetaDataProcessor {
     private static final Logger logger = LoggerFactory.getLogger(MetricsMetaDataProcessor.class);
     private final Map<String, Object> metadata;
 
+    // Magic bytes for compression format detection
+    private static final byte[] ZSTD_MAGIC = new byte[]{(byte) 0x28, (byte) 0xB5, (byte) 0x2F, (byte) 0xFD};
+    private static final byte[] GZIP_MAGIC = new byte[]{(byte) 0x1F, (byte) 0x8B};
+    private static final byte[] LZ4_MAGIC = new byte[]{(byte) 0x04, (byte) 0x22, (byte) 0x4D, (byte) 0x18};
+
+
     public MetricsMetaDataProcessor(final Map<String, Object> metadata) {
         this.metadata = metadata;
     }
 
     public byte[] processMetricsData(final AuthorizableRequestContext requestContext, final ByteBuffer buffer) {
-        final byte[] rawBytes = bufferToBytes(buffer);
-
+        final int bufferRemaining = buffer.remaining();
+        byte[] rawBytes = null;
         try {
-            MetricsData metricsData = MetricsData.parseFrom(rawBytes);
+            rawBytes = bufferToBytes(buffer);
+            final CompressionType compressionType = detectCompressionType(rawBytes);
+            final byte[] decompressedBytes = decompress(rawBytes, compressionType);
+            MetricsData metricsData = MetricsData.parseFrom(decompressedBytes);
             return enrichMetricsData(requestContext, metricsData);
         } catch (Exception e) {
-            logger.error("Error processing metrics data: {}", e.getMessage(), e);
+            logger.error("Error processing metrics data (bufferRemaining={}, rawBytesLength={}): {}",
+                    bufferRemaining, rawBytes != null ? rawBytes.length : "null", e.getMessage(), e);
         }
 
-        return rawBytes;
+        return rawBytes != null ? rawBytes : bufferToBytes(buffer);
+    }
+
+    private CompressionType detectCompressionType(final byte[] data) {
+        if (data == null || data.length < 4) {
+            return CompressionType.NONE;
+        }
+
+        if (startsWith(data, ZSTD_MAGIC)) {
+            logger.debug("Detected ZSTD compression");
+            return CompressionType.ZSTD;
+        }
+        if (startsWith(data, GZIP_MAGIC)) {
+            logger.debug("Detected GZIP compression");
+            return CompressionType.GZIP;
+        }
+        if (startsWith(data, LZ4_MAGIC)) {
+            logger.debug("Detected LZ4 compression");
+            return CompressionType.LZ4;
+        }
+
+        // No recognized compression magic bytes - assume uncompressed
+        logger.debug("No compression detected, treating as raw protobuf");
+        return CompressionType.NONE;
+    }
+
+    private boolean startsWith(final byte[] data, final byte[] prefix) {
+        if (data.length < prefix.length) {
+            return false;
+        }
+        for (int i = 0; i < prefix.length; i++) {
+            if (data[i] != prefix[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private byte[] decompress(final byte[] data, final CompressionType compressionType) throws Exception {
+        if (compressionType == CompressionType.NONE) {
+            return data;
+        }
+
+        final ByteBuffer buffer = ByteBuffer.wrap(data);
+        final Compression compression = Compression.of(compressionType).build();
+
+        try (InputStream inputStream = compression.wrapForInput(buffer, (byte) 0, BufferSupplier.NO_CACHING);
+             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+
+            inputStream.transferTo(outputStream);
+            return outputStream.toByteArray();
+        }
     }
 
     private byte[] bufferToBytes(ByteBuffer buffer) {
-        if (buffer.hasArray()) {
+        if (buffer.hasArray() && buffer.arrayOffset() == 0 && buffer.remaining() == buffer.array().length) {
             return buffer.array();
         } else {
             byte[] bytes = new byte[buffer.remaining()];
-            buffer.get(bytes);
+            buffer.duplicate().get(bytes);
             return bytes;
         }
     }
