@@ -19,6 +19,7 @@ import org.apache.kafka.common.record.CompressionType;
 import org.apache.kafka.common.requests.RequestContext;
 import org.apache.kafka.common.utils.BufferSupplier;
 import org.apache.kafka.server.authorizer.AuthorizableRequestContext;
+import org.apache.kafka.shaded.com.google.protobuf.InvalidProtocolBufferException;
 import org.apache.kafka.shaded.io.opentelemetry.proto.common.v1.AnyValue;
 import org.apache.kafka.shaded.io.opentelemetry.proto.common.v1.KeyValue;
 import org.apache.kafka.shaded.io.opentelemetry.proto.metrics.v1.MetricsData;
@@ -29,17 +30,13 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 public class MetricsMetaDataProcessor {
     private static final Logger logger = LoggerFactory.getLogger(MetricsMetaDataProcessor.class);
     private final Map<String, Object> metadata;
-
-    // Magic bytes for compression format detection
-    private static final byte[] ZSTD_MAGIC = new byte[]{(byte) 0x28, (byte) 0xB5, (byte) 0x2F, (byte) 0xFD};
-    private static final byte[] GZIP_MAGIC = new byte[]{(byte) 0x1F, (byte) 0x8B};
-    private static final byte[] LZ4_MAGIC = new byte[]{(byte) 0x04, (byte) 0x22, (byte) 0x4D, (byte) 0x18};
 
 
     public MetricsMetaDataProcessor(final Map<String, Object> metadata) {
@@ -51,9 +48,10 @@ public class MetricsMetaDataProcessor {
         byte[] rawBytes = null;
         try {
             rawBytes = bufferToBytes(buffer);
-            final CompressionType compressionType = detectCompressionType(rawBytes);
-            final byte[] decompressedBytes = decompress(rawBytes, compressionType);
-            MetricsData metricsData = MetricsData.parseFrom(decompressedBytes);
+            final MetricsData metricsData = decodeMetricsData(rawBytes);
+            if (metricsData == null) {
+                return rawBytes;
+            }
             return enrichMetricsData(requestContext, metricsData);
         } catch (Exception e) {
             logger.error("Error processing metrics data (bufferRemaining={}, rawBytesLength={}): {}",
@@ -63,39 +61,35 @@ public class MetricsMetaDataProcessor {
         return rawBytes != null ? rawBytes : bufferToBytes(buffer);
     }
 
-    private CompressionType detectCompressionType(final byte[] data) {
-        if (data == null || data.length < 4) {
-            return CompressionType.NONE;
+    private MetricsData decodeMetricsData(final byte[] rawBytes) {
+        if (rawBytes == null || rawBytes.length == 0) {
+            return null;
         }
 
-        if (startsWith(data, ZSTD_MAGIC)) {
-            logger.debug("Detected ZSTD compression");
-            return CompressionType.ZSTD;
-        }
-        if (startsWith(data, GZIP_MAGIC)) {
-            logger.debug("Detected GZIP compression");
-            return CompressionType.GZIP;
-        }
-        if (startsWith(data, LZ4_MAGIC)) {
-            logger.debug("Detected LZ4 compression");
-            return CompressionType.LZ4;
+        // Fast path: payload is uncompressed OTLP protobuf.
+        try {
+            return MetricsData.parseFrom(rawBytes);
+        } catch (final InvalidProtocolBufferException ignored) {
         }
 
-        // No recognized compression magic bytes - assume uncompressed
-        logger.debug("No compression detected, treating as raw protobuf");
-        return CompressionType.NONE;
-    }
-
-    private boolean startsWith(final byte[] data, final byte[] prefix) {
-        if (data.length < prefix.length) {
-            return false;
-        }
-        for (int i = 0; i < prefix.length; i++) {
-            if (data[i] != prefix[i]) {
-                return false;
+        // Slow path: try to decompress with common Kafka compression types.
+        for (final CompressionType compressionType : Arrays.asList(
+                CompressionType.ZSTD,
+                CompressionType.GZIP,
+                CompressionType.LZ4,
+                CompressionType.SNAPPY
+        )) {
+            try {
+                final byte[] decompressed = decompress(rawBytes, compressionType);
+                final MetricsData parsed = MetricsData.parseFrom(decompressed);
+                logger.debug("Decoded client telemetry payload using compression={}", compressionType.name);
+                return parsed;
+            } catch (final Exception ignored) {
             }
         }
-        return true;
+
+        logger.error("Unable to decode client telemetry payload as raw protobuf or with common compression codecs");
+        return null;
     }
 
     private byte[] decompress(final byte[] data, final CompressionType compressionType) throws Exception {
