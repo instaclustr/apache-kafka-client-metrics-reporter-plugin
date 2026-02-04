@@ -23,17 +23,20 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.Map;
 
 public class HttpMetricsExporter implements MetricsExporter {
     private final String endpoint;
     private final HttpClient httpClient;
     final Map<String, Object> metadata;
+    private final MetricsMetaDataProcessor metricsMetaDataProcessor;
     private final KafkaClientMetricsLogger logger = KafkaClientMetricsLogger.getLogger(HttpMetricsExporter.class);
 
     public HttpMetricsExporter(final String endpoint, final int timeoutMillis, final Map<String, Object> metadata) {
         this.endpoint = endpoint;
-        this.metadata = metadata;
+        this.metadata = metadata != null ? metadata : Collections.emptyMap();
+        this.metricsMetaDataProcessor = new MetricsMetaDataProcessor(this.metadata);
         this.httpClient = HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_2)
                 .connectTimeout(Duration.ofMillis(timeoutMillis))
@@ -44,8 +47,7 @@ public class HttpMetricsExporter implements MetricsExporter {
     @Override
     public void export(final AuthorizableRequestContext requestContext, final ClientTelemetryPayload payload) {
         try {
-            final MetricsMetaDataProcessor processor = new MetricsMetaDataProcessor(metadata);
-            final byte[] finalBytes = processor.processMetricsData(requestContext, payload.data());
+            final byte[] finalBytes = metricsMetaDataProcessor.processMetricsData(requestContext, payload.data());
 
             HttpRequest request = buildRequest(finalBytes);
             sendAsync(request);
@@ -53,7 +55,6 @@ public class HttpMetricsExporter implements MetricsExporter {
             logger.error("Error exporting OTLP metrics to {}: {}", endpoint, e.getMessage(), e);
         }
     }
-
 
     private HttpRequest buildRequest(final byte[] payload) {
         return HttpRequest.newBuilder()
@@ -67,7 +68,6 @@ public class HttpMetricsExporter implements MetricsExporter {
         httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenAccept(response -> {
                     logger.debug("OTLP metrics endpoint status: {}", response.statusCode());
-                    logger.debug("Response body: {}", response.body());
                 })
                 .exceptionally(ex -> {
                     logger.error("Error invoking the OTLP metrics endpoint", ex);

@@ -29,7 +29,7 @@ public class KafkaClientMetricsReporter implements MetricsReporter, ClientTeleme
 
     @Override
     public void init(List<KafkaMetric> metrics) {
-        logger.info("Initializing the client metric reporter: {}", metrics);
+        logger.info("Initializing the client metric reporter");
     }
 
     @Override
