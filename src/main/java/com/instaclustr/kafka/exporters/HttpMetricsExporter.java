@@ -15,10 +15,9 @@ limitations under the License.
 package com.instaclustr.kafka.exporters;
 
 import com.instaclustr.kafka.helpers.MetricsMetaDataProcessor;
+import com.instaclustr.kafka.logging.KafkaClientMetricsLogger;
 import org.apache.kafka.server.authorizer.AuthorizableRequestContext;
 import org.apache.kafka.server.telemetry.ClientTelemetryPayload;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -30,7 +29,7 @@ public class HttpMetricsExporter implements MetricsExporter {
     private final String endpoint;
     private final HttpClient httpClient;
     final Map<String, Object> metadata;
-    private final Logger logger = LoggerFactory.getLogger(HttpMetricsExporter.class);
+    private final KafkaClientMetricsLogger logger = KafkaClientMetricsLogger.getLogger(HttpMetricsExporter.class);
 
     public HttpMetricsExporter(final String endpoint, final int timeoutMillis, final Map<String, Object> metadata) {
         this.endpoint = endpoint;

@@ -20,12 +20,11 @@ import org.apache.kafka.common.metrics.KafkaMetric;
 import org.apache.kafka.common.metrics.MetricsReporter;
 import org.apache.kafka.server.telemetry.ClientTelemetry;
 import org.apache.kafka.server.telemetry.ClientTelemetryReceiver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.instaclustr.kafka.logging.KafkaClientMetricsLogger;
 
 public class KafkaClientMetricsReporter implements MetricsReporter, ClientTelemetry {
 
-    private static final Logger logger = LoggerFactory.getLogger(KafkaClientMetricsReporter.class);
+    private static final KafkaClientMetricsLogger logger = KafkaClientMetricsLogger.getLogger(KafkaClientMetricsReporter.class);
 
 
     @Override

@@ -14,6 +14,7 @@ limitations under the License.
 
 package com.instaclustr.kafka.helpers;
 
+import com.instaclustr.kafka.logging.KafkaClientMetricsLogger;
 import org.apache.kafka.common.compress.Compression;
 import org.apache.kafka.common.record.CompressionType;
 import org.apache.kafka.common.requests.RequestContext;
@@ -24,8 +25,6 @@ import org.apache.kafka.shaded.io.opentelemetry.proto.common.v1.AnyValue;
 import org.apache.kafka.shaded.io.opentelemetry.proto.common.v1.KeyValue;
 import org.apache.kafka.shaded.io.opentelemetry.proto.metrics.v1.MetricsData;
 import org.apache.kafka.shaded.io.opentelemetry.proto.resource.v1.Resource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -35,7 +34,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class MetricsMetaDataProcessor {
-    private static final Logger logger = LoggerFactory.getLogger(MetricsMetaDataProcessor.class);
+    private static final KafkaClientMetricsLogger logger = KafkaClientMetricsLogger.getLogger(MetricsMetaDataProcessor.class);
     private final Map<String, Object> metadata;
 
 
