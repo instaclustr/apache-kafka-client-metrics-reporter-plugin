@@ -32,11 +32,13 @@ public class HttpMetricsExporter implements MetricsExporter {
     final Map<String, Object> metadata;
     private final MetricsMetaDataProcessor metricsMetaDataProcessor;
     private final KafkaClientMetricsLogger logger = KafkaClientMetricsLogger.getLogger(HttpMetricsExporter.class);
+    private final Duration timeoutMillisDuration;
 
     public HttpMetricsExporter(final String endpoint, final int timeoutMillis, final Map<String, Object> metadata) {
         this.endpoint = endpoint;
         this.metadata = metadata != null ? metadata : Collections.emptyMap();
         this.metricsMetaDataProcessor = new MetricsMetaDataProcessor(this.metadata);
+        this.timeoutMillisDuration = Duration.ofMillis(timeoutMillis);
         this.httpClient = HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_2)
                 .connectTimeout(Duration.ofMillis(timeoutMillis))
@@ -61,6 +63,7 @@ public class HttpMetricsExporter implements MetricsExporter {
                 .uri(URI.create(endpoint))
                 .header("Content-Type", "application/x-protobuf")
                 .POST(HttpRequest.BodyPublishers.ofByteArray(payload))
+                .timeout(this.timeoutMillisDuration)
                 .build();
     }
 
