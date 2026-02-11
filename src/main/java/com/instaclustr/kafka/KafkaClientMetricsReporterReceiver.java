@@ -16,16 +16,15 @@ package com.instaclustr.kafka;
 
 import com.instaclustr.kafka.exporters.MetricsExporter;
 import com.instaclustr.kafka.exporters.MetricsExporterFactory;
+import com.instaclustr.kafka.logging.KafkaClientMetricsLogger;
 import org.apache.kafka.server.authorizer.AuthorizableRequestContext;
 import org.apache.kafka.server.telemetry.ClientTelemetryPayload;
 import org.apache.kafka.server.telemetry.ClientTelemetryReceiver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class KafkaClientMetricsReporterReceiver implements ClientTelemetryReceiver {
 
     private final MetricsExporter metricsExporter;
-    private static final Logger logger = LoggerFactory.getLogger(KafkaClientMetricsReporterReceiver.class);
+    private static final KafkaClientMetricsLogger logger = KafkaClientMetricsLogger.getLogger(KafkaClientMetricsReporterReceiver.class);
 
     public KafkaClientMetricsReporterReceiver() {
         logger.info("Initializing the Kafka Client Metrics Reporter Receiver");
