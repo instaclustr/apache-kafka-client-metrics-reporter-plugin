@@ -89,6 +89,13 @@
         </profile>
 
         <profile>
+            <id>kafka-3.9.2</id>
+            <properties>
+                <kafka.clients.version>3.9.2</kafka.clients.version>
+            </properties>
+        </profile>
+
+        <profile>
             <id>kafka-4.0.0</id>
             <properties>
                 <kafka.clients.version>4.0.0</kafka.clients.version>
