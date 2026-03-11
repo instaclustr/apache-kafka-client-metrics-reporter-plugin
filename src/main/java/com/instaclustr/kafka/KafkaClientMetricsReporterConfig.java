@@ -14,8 +14,7 @@ limitations under the License.
 
 package com.instaclustr.kafka;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.instaclustr.kafka.logging.KafkaClientMetricsLogger;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.FileInputStream;
@@ -24,7 +23,7 @@ import java.util.Map;
 public class KafkaClientMetricsReporterConfig {
 
     public Map<String, Object> configurations;
-    private static final Logger logger = LoggerFactory.getLogger(KafkaClientMetricsReporterConfig.class);
+    private static final KafkaClientMetricsLogger logger = KafkaClientMetricsLogger.getLogger(KafkaClientMetricsReporterConfig.class);
 
     public KafkaClientMetricsReporterConfig() {
         this(System.getenv("KAFKA_CLIENT_METRICS_CONFIG_PATH"));

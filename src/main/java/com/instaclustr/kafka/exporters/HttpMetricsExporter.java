@@ -15,26 +15,30 @@ limitations under the License.
 package com.instaclustr.kafka.exporters;
 
 import com.instaclustr.kafka.helpers.MetricsMetaDataProcessor;
+import com.instaclustr.kafka.logging.KafkaClientMetricsLogger;
 import org.apache.kafka.server.authorizer.AuthorizableRequestContext;
 import org.apache.kafka.server.telemetry.ClientTelemetryPayload;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.Map;
 
 public class HttpMetricsExporter implements MetricsExporter {
     private final String endpoint;
     private final HttpClient httpClient;
     final Map<String, Object> metadata;
-    private final Logger logger = LoggerFactory.getLogger(HttpMetricsExporter.class);
+    private final MetricsMetaDataProcessor metricsMetaDataProcessor;
+    private final KafkaClientMetricsLogger logger = KafkaClientMetricsLogger.getLogger(HttpMetricsExporter.class);
+    private final Duration timeoutMillisDuration;
 
     public HttpMetricsExporter(final String endpoint, final int timeoutMillis, final Map<String, Object> metadata) {
         this.endpoint = endpoint;
-        this.metadata = metadata;
+        this.metadata = metadata != null ? metadata : Collections.emptyMap();
+        this.metricsMetaDataProcessor = new MetricsMetaDataProcessor(this.metadata);
+        this.timeoutMillisDuration = Duration.ofMillis(timeoutMillis);
         this.httpClient = HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_2)
                 .connectTimeout(Duration.ofMillis(timeoutMillis))
@@ -45,8 +49,7 @@ public class HttpMetricsExporter implements MetricsExporter {
     @Override
     public void export(final AuthorizableRequestContext requestContext, final ClientTelemetryPayload payload) {
         try {
-            final MetricsMetaDataProcessor processor = new MetricsMetaDataProcessor(metadata);
-            final byte[] finalBytes = processor.processMetricsData(requestContext, payload.data());
+            final byte[] finalBytes = metricsMetaDataProcessor.processMetricsData(requestContext, payload.data());
 
             HttpRequest request = buildRequest(finalBytes);
             sendAsync(request);
@@ -55,12 +58,12 @@ public class HttpMetricsExporter implements MetricsExporter {
         }
     }
 
-
     private HttpRequest buildRequest(final byte[] payload) {
         return HttpRequest.newBuilder()
                 .uri(URI.create(endpoint))
                 .header("Content-Type", "application/x-protobuf")
                 .POST(HttpRequest.BodyPublishers.ofByteArray(payload))
+                .timeout(this.timeoutMillisDuration)
                 .build();
     }
 
@@ -68,7 +71,6 @@ public class HttpMetricsExporter implements MetricsExporter {
         httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenAccept(response -> {
                     logger.debug("OTLP metrics endpoint status: {}", response.statusCode());
-                    logger.debug("Response body: {}", response.body());
                 })
                 .exceptionally(ex -> {
                     logger.error("Error invoking the OTLP metrics endpoint", ex);

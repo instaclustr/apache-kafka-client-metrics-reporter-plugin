@@ -14,6 +14,7 @@ limitations under the License.
 
 package com.instaclustr.kafka.exporters;
 
+import java.util.Collections;
 import java.util.Map;
 
 public class MetricsExporterFactory {
@@ -33,7 +34,7 @@ public class MetricsExporterFactory {
         if (metadataObj != null && !(metadataObj instanceof Map)) {
             throw new IllegalArgumentException("Metadata configuration is not a valid map");
         }
-        final Map<String, Object> metadata = (Map<String, Object>) metadataObj;
+        final Map<String, Object> metadata = metadataObj != null ? (Map<String, Object>) metadataObj : Collections.emptyMap();
 
         switch (((String) exporterMap.get("mode")).toUpperCase()) {
             case "HTTP":
