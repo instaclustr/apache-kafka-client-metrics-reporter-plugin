@@ -21,7 +21,7 @@
 
     <groupId>com.kafka.instaclustr</groupId>
     <artifactId>apache-kafka-client-metrics-reporter-plugin</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -85,6 +85,13 @@
             <id>kafka-3.9.1</id>
             <properties>
                 <kafka.clients.version>3.9.1</kafka.clients.version>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>kafka-3.9.2</id>
+            <properties>
+                <kafka.clients.version>3.9.2</kafka.clients.version>
             </properties>
         </profile>
 

@@ -28,7 +28,7 @@ By default, it will build with version 3.9.1. To build with a different version,
    ```
    or to build with a specific profile:
    ```bash
-    mvn clean package -Pkafka-4.0.0
+    mvn clean package -Pkafka-4.1.1
    ```
 3. Copy the generated JAR file from the `target` directory to your Apache Kafka library path. The library path is typically the `libs` directory in your Kafka installation - `$KAFKA_HOME/libs/`
 4. Create a Yaml configuration file for the plugin. Below is an example configuration that pushes metrics to an OpenTelemetry Collector:
