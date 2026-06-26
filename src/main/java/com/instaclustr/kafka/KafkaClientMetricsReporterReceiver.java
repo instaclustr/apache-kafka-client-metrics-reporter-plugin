@@ -35,7 +35,6 @@ public class KafkaClientMetricsReporterReceiver implements ClientTelemetryExport
 
     @Override
     public void exportMetrics(final ClientTelemetryContext context, final ClientTelemetryPayload telemetryPayload) {
-        logger.debug("Received telemetry push with interval {}ms", context.pushIntervalMs());
         metricsExporter.export(context, telemetryPayload);
     }
 }

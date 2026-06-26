@@ -49,7 +49,6 @@ public class HttpMetricsExporter implements MetricsExporter {
     @Override
     public void export(final ClientTelemetryContext context, final ClientTelemetryPayload payload) {
         try {
-            logger.debug("Exporting OTLP metrics to {} (push interval: {}ms)", endpoint, context.pushIntervalMs());
             final byte[] finalBytes = metricsMetaDataProcessor.processMetricsData(
                     context.authorizableRequestContext(), payload.data());
 
