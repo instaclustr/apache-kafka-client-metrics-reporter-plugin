@@ -21,14 +21,14 @@
 
     <groupId>com.kafka.instaclustr</groupId>
     <artifactId>apache-kafka-client-metrics-reporter-plugin</artifactId>
-    <version>1.0.4</version>
+    <version>1.1.0</version>
     <packaging>jar</packaging>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <kafka.clients.version>3.9.1</kafka.clients.version>
+        <kafka.clients.version>4.2.1</kafka.clients.version>
     </properties>
 
     <dependencies>
@@ -74,41 +74,6 @@
     </dependencies>
 
     <profiles>
-        <profile>
-            <id>kafka-3.8.1</id>
-            <properties>
-                <kafka.clients.version>3.8.1</kafka.clients.version>
-            </properties>
-        </profile>
-
-        <profile>
-            <id>kafka-3.9.1</id>
-            <properties>
-                <kafka.clients.version>3.9.1</kafka.clients.version>
-            </properties>
-        </profile>
-
-        <profile>
-            <id>kafka-3.9.2</id>
-            <properties>
-                <kafka.clients.version>3.9.2</kafka.clients.version>
-            </properties>
-        </profile>
-
-        <profile>
-            <id>kafka-4.0.0</id>
-            <properties>
-                <kafka.clients.version>4.0.0</kafka.clients.version>
-            </properties>
-        </profile>
-
-        <profile>
-            <id>kafka-4.1.1</id>
-            <properties>
-                <kafka.clients.version>4.1.1</kafka.clients.version>
-            </properties>
-        </profile>
-
         <profile>
             <id>kafka-4.2.1</id>
             <properties>

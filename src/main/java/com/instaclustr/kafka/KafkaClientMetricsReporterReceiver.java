@@ -17,11 +17,11 @@ package com.instaclustr.kafka;
 import com.instaclustr.kafka.exporters.MetricsExporter;
 import com.instaclustr.kafka.exporters.MetricsExporterFactory;
 import com.instaclustr.kafka.logging.KafkaClientMetricsLogger;
-import org.apache.kafka.server.authorizer.AuthorizableRequestContext;
+import org.apache.kafka.server.telemetry.ClientTelemetryContext;
+import org.apache.kafka.server.telemetry.ClientTelemetryExporter;
 import org.apache.kafka.server.telemetry.ClientTelemetryPayload;
-import org.apache.kafka.server.telemetry.ClientTelemetryReceiver;
 
-public class KafkaClientMetricsReporterReceiver implements ClientTelemetryReceiver {
+public class KafkaClientMetricsReporterReceiver implements ClientTelemetryExporter {
 
     private final MetricsExporter metricsExporter;
     private static final KafkaClientMetricsLogger logger = KafkaClientMetricsLogger.getLogger(KafkaClientMetricsReporterReceiver.class);
@@ -34,8 +34,8 @@ public class KafkaClientMetricsReporterReceiver implements ClientTelemetryReceiv
     }
 
     @Override
-    public void exportMetrics(final AuthorizableRequestContext requestContext, final ClientTelemetryPayload telemetryPayload) {
-        metricsExporter.export(requestContext, telemetryPayload);
+    public void exportMetrics(final ClientTelemetryContext context, final ClientTelemetryPayload telemetryPayload) {
+        metricsExporter.export(context, telemetryPayload);
     }
 }
 

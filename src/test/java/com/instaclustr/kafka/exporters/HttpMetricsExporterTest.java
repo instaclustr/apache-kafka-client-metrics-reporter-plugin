@@ -15,6 +15,7 @@ limitations under the License.
 package com.instaclustr.kafka.exporters;
 
 import org.apache.kafka.server.authorizer.AuthorizableRequestContext;
+import org.apache.kafka.server.telemetry.ClientTelemetryContext;
 import org.apache.kafka.server.telemetry.ClientTelemetryPayload;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -38,6 +39,9 @@ public class HttpMetricsExporterTest {
     private HttpClient mockHttpClient;
 
     @Mock
+    private ClientTelemetryContext mockContext;
+
+    @Mock
     private AuthorizableRequestContext mockRequestContext;
 
     @Mock
@@ -46,6 +50,8 @@ public class HttpMetricsExporterTest {
     @BeforeMethod
     public void setUp() {
         MockitoAnnotations.openMocks(this);
+        when(mockContext.pushIntervalMs()).thenReturn(30000);
+        when(mockContext.authorizableRequestContext()).thenReturn(mockRequestContext);
     }
 
     @Test
@@ -65,7 +71,7 @@ public class HttpMetricsExporterTest {
         clientField.setAccessible(true);
         clientField.set(exporter, mockHttpClient);
 
-        exporter.export(mockRequestContext, mockPayload);
+        exporter.export(mockContext, mockPayload);
         verify(mockHttpClient, times(1)).sendAsync(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
     }
 
