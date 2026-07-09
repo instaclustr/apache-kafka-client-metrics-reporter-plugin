@@ -22,13 +22,13 @@ This project is maintained by [Instaclustr NetApp](https://www.instaclustr.com/)
 
 1. Download the latest release of the plugin.
 2. Compile the plugin using Maven. The in pom.xml there is currently multiple profiles to build the plugin with different versions of Apache Kafka.
-By default, it will build with version 4.2.1. To build with a different version, use the `-P` flag to specify the profile.
+By default, it will build with version 4.3.1. To build with a different version, use the `-P` flag to specify the profile.
    ```bash
    mvn clean package
    ```
    or to build with a specific profile:
    ```bash
-    mvn clean package -Pkafka-4.2.1
+    mvn clean package -Pkafka-4.3.1
    ```
 3. Copy the generated JAR file from the `target` directory to your Apache Kafka library path. The library path is typically the `libs` directory in your Kafka installation - `$KAFKA_HOME/libs/`
 4. Create a Yaml configuration file for the plugin. Below is an example configuration that pushes metrics to an OpenTelemetry Collector:
