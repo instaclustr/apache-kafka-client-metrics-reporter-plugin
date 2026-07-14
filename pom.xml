@@ -80,12 +80,6 @@
                 <kafka.clients.version>4.3.1</kafka.clients.version>
             </properties>
         </profile>
-        <profile>
-            <id>kafka-4.2.1</id>
-            <properties>
-                <kafka.clients.version>4.2.1</kafka.clients.version>
-            </properties>
-        </profile>
     </profiles>
 
     <build>
