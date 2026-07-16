@@ -10,7 +10,7 @@ This project is maintained by [Instaclustr NetApp](https://www.instaclustr.com/)
 
 ## Prerequisites
 
-1. Apache Kafka 4.2.0 or higher (see [Kafka Version Compatibility](#kafka-version-compatibility) for older versions).
+1. Apache Kafka 4.3.1 or higher (see [Kafka Version Compatibility](#kafka-version-compatibility) for older versions).
 2. Java 17 for the plugin to run.
 3. Maven to build the plugin.
 4. An OpenTelemetry Collector or any HTTP endpoint to push the metrics to.
@@ -22,13 +22,13 @@ This project is maintained by [Instaclustr NetApp](https://www.instaclustr.com/)
 
 1. Download the latest release of the plugin.
 2. Compile the plugin using Maven. The in pom.xml there is currently multiple profiles to build the plugin with different versions of Apache Kafka.
-By default, it will build with version 4.2.1. To build with a different version, use the `-P` flag to specify the profile.
+By default, it will build with version 4.3.1. To build with a different version, use the `-P` flag to specify the profile.
    ```bash
    mvn clean package
    ```
    or to build with a specific profile:
    ```bash
-    mvn clean package -Pkafka-4.2.1
+    mvn clean package -Pkafka-4.3.1
    ```
 3. Copy the generated JAR file from the `target` directory to your Apache Kafka library path. The library path is typically the `libs` directory in your Kafka installation - `$KAFKA_HOME/libs/`
 4. Create a Yaml configuration file for the plugin. Below is an example configuration that pushes metrics to an OpenTelemetry Collector:
@@ -63,11 +63,22 @@ By default, it will build with version 4.2.1. To build with a different version,
 
 ## Kafka Version Compatibility
 
-This plugin requires **Apache Kafka 4.2.0 or higher** to build and run. The current codebase uses the
+### v1.2.0
+The **v1.2.0 release** is requires **Apache Kafka 4.3.1** to build and run. It uses the `Compression` factory API instead of `CompressionType`, which was moved to an internal package in Kafka 4.3.0 ([KAFKA-20128](https://github.com/apache/kafka/pull/21412)).
+
+In Kafka 4.3.1, broker startup code in [`Logging.scala`](https://github.com/apache/kafka/blob/4.3.1/core/src/main/scala/kafka/utils/Logging.scala) was changed to call `org.apache.kafka.common.utils.Utils.registerMBean` instead of the Scala `CoreUtils.registerMBean` used in Kafka 4.2.x ([`Logging.scala` in 4.2.1](https://github.com/apache/kafka/blob/4.2.1/core/src/main/scala/kafka/utils/Logging.scala)). If a **v1.1.0** jar (built with `kafka-clients` 4.2.x) is present in the broker's `libs/` directory alongside `kafka-clients-4.3.1.jar`, the JVM may load the 4.2.x classes first, causing the broker to fail at startup with:
+```
+java.lang.NoSuchMethodError: 'boolean org.apache.kafka.common.utils.Utils.registerMBean(java.lang.Object, java.lang.String)'
+```
+Replace the plugin jar with the **v1.2.0** build (compiled against `kafka-clients` 4.3.1) to resolve this.
+
+### v1.1.0
+The **v1.1.0 release** requires **Apache Kafka 4.2.0** to build and run. The current codebase uses the
 [KIP-1217](https://cwiki.apache.org/confluence/display/KAFKA/KIP-1217%3A+Include+push+interval+in+ClientTelemetryReceiver+context)
 interfaces (`ClientTelemetryExporter`, `ClientTelemetryExporterProvider`, `ClientTelemetryContext`) which were
 introduced in Kafka 4.2.0 and are not present in earlier releases.
 
+### v1.0.4
 If you need to run the plugin against **Kafka 3.x or 4.0.x / 4.1.x**, please use the
 [v1.0.4 release](https://github.com/instaclustr/apache-kafka-client-metrics-reporter-plugin/releases/tag/v1.0.4),
 which is the last version built against the older `ClientTelemetry` / `ClientTelemetryReceiver` interfaces and

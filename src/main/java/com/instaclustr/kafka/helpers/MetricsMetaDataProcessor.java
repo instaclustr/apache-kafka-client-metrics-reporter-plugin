@@ -16,7 +16,6 @@ package com.instaclustr.kafka.helpers;
 
 import com.instaclustr.kafka.logging.KafkaClientMetricsLogger;
 import org.apache.kafka.common.compress.Compression;
-import org.apache.kafka.common.record.CompressionType;
 import org.apache.kafka.common.requests.RequestContext;
 import org.apache.kafka.common.utils.BufferSupplier;
 import org.apache.kafka.server.authorizer.AuthorizableRequestContext;
@@ -84,16 +83,16 @@ public class MetricsMetaDataProcessor {
         }
 
         // Slow path: try to decompress with common Kafka compression types.
-        for (final CompressionType compressionType : Arrays.asList(
-                CompressionType.ZSTD,
-                CompressionType.GZIP,
-                CompressionType.LZ4,
-                CompressionType.SNAPPY
+        for (final Compression compression : Arrays.asList(
+                Compression.zstd().build(),
+                Compression.gzip().build(),
+                Compression.lz4().build(),
+                Compression.snappy().build()
         )) {
             try {
-                final byte[] decompressed = decompress(rawBytes, compressionType);
+                final byte[] decompressed = decompress(rawBytes, compression);
                 final MetricsData parsed = MetricsData.parseFrom(decompressed);
-                logger.debug("Decoded client telemetry payload using compression={}", compressionType.name);
+                logger.debug("Decoded client telemetry payload using compression={}", compression.type());
                 return parsed;
             } catch (final Exception ignored) {
             }
@@ -103,13 +102,12 @@ public class MetricsMetaDataProcessor {
         return null;
     }
 
-    private byte[] decompress(final byte[] data, final CompressionType compressionType) throws Exception {
-        if (compressionType == CompressionType.NONE) {
+    private byte[] decompress(final byte[] data, final Compression compression) throws Exception {
+        if (compression.equals(Compression.none().build())) {
             return data;
         }
 
         final ByteBuffer buffer = ByteBuffer.wrap(data);
-        final Compression compression = Compression.of(compressionType).build();
 
         try (InputStream inputStream = compression.wrapForInput(buffer, (byte) 0, BufferSupplier.NO_CACHING);
              ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
